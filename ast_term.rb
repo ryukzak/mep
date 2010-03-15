@@ -21,17 +21,34 @@ class ASTTerm
     self.to_gv f
     f.puts "}"
     f.close
+    self.reset_gv_flag
     system "dot -Tpng #{ gv_file } -o #{ png_file }"
   end
+
 end
 
 class Function
-  attr_accessor :function, :condition, :arity
+  attr_accessor :function, :condition, :arity, :name
+
   def initialize(f, a=1, c=nil)
     @function = f
     @arity = a
     @condition = c
+    @gv = true
   end
+
+  def to_gv(f=$>)
+    if @gv
+      f.puts "#{ self.object_id } [label = \"#{ @name }\"];"
+      @gv = false
+    end    
+    "#{ self.object_id }"
+  end
+
+  def reset_gv_flag
+    @gv = false
+  end
+
 end
 
 class FunctionApplication < ASTTerm
@@ -48,6 +65,11 @@ class FunctionApplication < ASTTerm
     function.to_gv
   end
 
+  def reset_gv_flag
+    @args.map { |e| e.reset_gv_flag }
+    function.reset_gv_flag    
+  end
+
 end
 
 class Named < ASTTerm
@@ -55,16 +77,21 @@ class Named < ASTTerm
 
   def initialize(n)
     @name = n
-    @undefined = true
+    @gv = true
   end
 
   def to_gv(f=$>)
-    if @undefined
+    if @gv
       f.puts "#{ self.object_id } [label = \"#{ @name }\"];"
-      @undefined = false
+      @gv = false
     end    
     "#{ self.object_id }"
   end
+
+  def reset_gv_flag
+    @gv = true
+  end
+
 end
 
 class Constant < ASTTerm
@@ -72,14 +99,19 @@ class Constant < ASTTerm
 
   def initialize(v)
     @value = v
-    @undefined = true
+    @gv = true
   end
 
   def to_gv(f=$>)
-    if @undefined
+    if @gv
       f.puts "#{ self.object_id } [label = \"#{ @value }\"];"
-      @undefined = false
+      @gv = false
     end
     "#{ self.object_id }"
   end
+
+  def reset_gv_flag
+    @gv = true
+  end
+  
 end

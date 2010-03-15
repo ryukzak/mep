@@ -2,9 +2,6 @@
 
 require "ast_term"
 
-
-
-
 class Interpreter 
   attr_accessor :named, :ast
   
@@ -15,6 +12,7 @@ class Interpreter
       fun = @named[ ast.function.name ].detect do |e| 
         e.arity == ast.args.length  if e.class == Function
       end
+      fun.name = ast.function.name
       ast.function = fun
       ast.args = ast.args.map { |e| substitution e}
       ast
