@@ -9,6 +9,7 @@ class Interpreter
     @named.merge! named  unless named.nil?
     ast = @ast  if ast.nil?
     if ast.class == FunctionApplication
+      return ast  unless @named.include? ast.function.name
       fun = @named[ ast.function.name ].detect do |e| 
         e.arity == ast.args.length  if e.class == Function
       end
@@ -17,6 +18,7 @@ class Interpreter
       ast.args = ast.args.map { |e| substitution e}
       ast
     elsif ast.class == Named
+      return ast  unless @named.include? ast.name
       @named[ ast.name ].detect { |e| e.class == Constant }
     elsif ast.class == Constant
       ast
@@ -39,15 +41,34 @@ class Interpreter
       raise "Unknow data when try to eval"
     elsif ast.class == Constant
       ast
-    end    
-    
+    end        
   end
-
+  
+  def part_eval
+    def eval!(ast)
+      if ast.class == FunctionApplication
+        ast.args = ast.args.map { |e| eval! e }
+        if ast.args.all? { |e| e.class == Constant } and 
+            ast.function.class == Function
+          args = ast.args.map { |e| e.value }
+          ast = Constant.new( ast.function.function.call args )
+        end
+        ast
+      elsif ast.class == Named
+        ast
+      elsif ast.class == Constant
+        ast
+      end        
+    end
+    
+    @ast = eval! @ast
+  end
+  
   def initialize(ast=nil, named=nil)
     @ast = ast
     @named = { 
       "pi"   => [ Constant.new( Math::PI ) ],
-      "x"   => [ Constant.new( 10 ) ],
+      "x"    => [ Constant.new( 10 ) ],
       "e"    => [ Constant.new( Math::E ) ],
       "sqrt" => [ Function.new( ->( x ){ Math.sqrt x[ 0 ] }, 1,
                                 ->( x ){ x[ 0 ] >= 0 } )
