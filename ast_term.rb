@@ -27,29 +27,8 @@ class ASTTerm
 
 end
 
-class Function
-  attr_accessor :function, :condition, :arity, :name
 
-  def initialize(f, a=1, c=nil)
-    @function = f
-    @arity = a
-    @condition = c
-    @gv = true
-  end
 
-  def to_gv(f=$>)
-    if @gv
-      f.puts "#{ self.object_id } [label = \"#{ @name }\"];"
-      @gv = false
-    end    
-    "#{ self.object_id }"
-  end
-
-  def reset_gv_flag
-    @gv = false
-  end
-
-end
 
 class FunctionApplication < ASTTerm
   attr_accessor :function, :args
@@ -72,46 +51,71 @@ class FunctionApplication < ASTTerm
 
 end
 
-class Named < ASTTerm
-  attr_accessor :name
 
-  def initialize(n)
-    @name = n
+class ASTTermLeaf < ASTTerm
+
+  def initialize
     @gv = true
   end
 
-  def to_gv(f=$>)
+  def reset_gv_flag
+    @gv = true
+  end
+
+  def leaf_to_gv(f, str)
     if @gv
-      f.puts "#{ self.object_id } [label = \"#{ @name }\"];"
+      f.puts "#{ self.object_id } [label = \"#{ str }\"];"
       @gv = false
     end    
     "#{ self.object_id }"
   end
 
-  def reset_gv_flag
-    @gv = true
-  end
-
 end
 
-class Constant < ASTTerm
-  attr_accessor :value
+class Named < ASTTermLeaf
+  attr_accessor :name
 
-  def initialize(v)
-    @value = v
-    @gv = true
+  def initialize(n)
+    super()
+    @name = n
   end
 
   def to_gv(f=$>)
-    if @gv
-      f.puts "#{ self.object_id } [label = \"#{ @value }\"];"
-      @gv = false
-    end
-    "#{ self.object_id }"
+    leaf_to_gv f, @name
   end
 
-  def reset_gv_flag
-    @gv = true
+end
+
+
+class Constant < ASTTermLeaf
+  attr_accessor :value
+
+  def initialize(v)
+    super()
+    @value = v
+  end
+
+  def to_gv(f=$>)
+    leaf_to_gv f, @value
   end
   
 end
+
+
+class Function < ASTTermLeaf
+  attr_accessor :function, :condition, :arity, :name
+
+  def initialize(f, a=1, c=nil)
+    super()
+    @function = f
+    @arity = a
+    @condition = c
+  end
+
+  def to_gv(f=$>)
+    leaf_to_gv f, @name
+  end
+
+end
+
+

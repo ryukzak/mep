@@ -19,11 +19,12 @@ require "interpreter"
 ast = Parser.run(  Lexer.run "2 + sqrt( 4 )" )
 
 ast.to_gv_file
+# ast.to_gv_file "out2.gv", "out2.png"
 
 int = Interpreter.new ast
 int.substitution
 
-puts int.ast.inspect
+# puts int.ast.inspect
 
 int.ast.to_gv_file "out2.gv", "out2.png"
 
