@@ -14,7 +14,7 @@ class Interpreter
         e.arity == ast.args.length  if e.class == Function
       end
       fun.name = ast.function.name
-      ast.function = fun
+      ast.function = fun.clone
       ast.args = ast.args.map { |e| substitution e}
       ast
     elsif ast.class == Named
@@ -44,24 +44,8 @@ class Interpreter
     end        
   end
   
-  def part_eval
-    def eval!(ast)
-      if ast.class == FunctionApplication
-        ast.args = ast.args.map { |e| eval! e }
-        if ast.args.all? { |e| e.class == Constant } and 
-            ast.function.class == Function
-          args = ast.args.map { |e| e.value }
-          ast = Constant.new( ast.function.function.call args )
-        end
-        ast
-      elsif ast.class == Named
-        ast
-      elsif ast.class == Constant
-        ast
-      end        
-    end
-    
-    @ast = eval! @ast
+  def part_eval!
+    self.ast.part_eval!
   end
   
   def initialize(ast=nil, named=nil)
@@ -86,5 +70,47 @@ class Interpreter
     }  if named.nil?
   end
   
+end
+
+
+
+class FunctionApplication
+  
+  def part_eval!
+    self.args = self.args.map { |e| e.part_eval! }
+    if self.args.all? { |e| e.class == Constant } and 
+        self.function.class == Function
+      self.args = self.args.map { |e| e.value }
+      return Constant.new( self.function.function.call args )
+    end
+    self
+  end
   
 end
+
+
+class ASTTermLeaf
+end
+
+
+class Named
+  
+  def part_eval!
+    self
+  end
+  
+end
+
+
+class Constant
+  
+  def part_eval!
+    self
+  end
+  
+end
+
+
+class Function
+end
+
