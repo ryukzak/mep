@@ -33,11 +33,11 @@ class Expression < ParserTerm
   attr_accessor :expr
   
   def initialize(e)
-    @expr = e
+    self.expr = e
   end
   
   def reverse!
-    @expr.reverse!
+    self.expr.reverse!
   end
 
 end
@@ -46,11 +46,11 @@ class ExpressionList < ParserTerm
   attr_accessor :exprs
   
   def initialize(e=[])
-    @exprs = e
+    self.exprs = e
   end  
   
   def push(e)
-    @exprs << e
+    self.exprs << e
     self
   end
   
@@ -60,7 +60,7 @@ class Atom < ParserTerm
   attr_accessor :value
   
   def initialize(l)
-    @value = case l
+    self.value = case l
              when "(" then :open
              when ")" then :close
              when "," then :comma
@@ -69,15 +69,15 @@ class Atom < ParserTerm
   end
   
   def open?
-    @value == :open
+    self.value == :open
   end
   
   def close?
-    @value == :close
+    self.value == :close
   end
   
   def comma?
-    @value == :comma
+    self.value == :comma
   end
 
   def operator?
@@ -93,10 +93,10 @@ class Atom < ParserTerm
   end
 
   def to_ast
-    if @value =~ /\d+\.\d+|\d+/
-      Constant.new @value.to_f
+    if self.value =~ /\d+\.\d+|\d+/
+      Constant.new self.value.to_f
     else
-      Named.new @value
+      Named.new self.value
     end
   end
   
@@ -121,18 +121,18 @@ class Parser
   end
  
   def make_atom(lexems=nil)
-    @lexems = lexems  unless lexems.nil?
-    @atoms = @lexems.map { |e| Atom.new e  }
+    self.lexems = lexems  unless lexems.nil?
+    self.atoms = self.lexems.map { |e| Atom.new e  }
   end
   
   def make_expr(atoms=nil)
-    atoms = @atoms  if atoms.nil?
+    atoms = self.atoms  if atoms.nil?
     atoms = ( make_expr_list atoms ).to_a  if expr_list? atoms
     atoms = parentheses_to_expr atoms
     unless atoms.length == 1 and atoms[0].class == ExpressionList
       atoms = Expression.new atoms
     end
-    @expr = atoms
+    self.expr = atoms
   end
   
   def expr_list?(atoms)
@@ -186,7 +186,7 @@ class Parser
   end
 
   def make_ast(expr=nil)
-    expr = @expr  if expr.nil?
+    expr = self.expr  if expr.nil?
 
     if expr.class == Expression
       return make_ast expr.expr[0]  if expr.expr.length == 1
@@ -216,7 +216,7 @@ class Parser
         expr = pre.to_a + fa.to_a + post.to_a
       end
       expr = expr[0]  if expr.length == 1
-      @ast = expr
+      self.ast = expr
     elsif expr.class == Atom
       expr.to_ast
     elsif expr.class == ExpressionList

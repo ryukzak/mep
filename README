@@ -1,0 +1,16 @@
+ast_term - AST Term description and methods for initialize, predicate
+         for fix unknow method problem in parser.rb, graph_viz
+         output. More method for this classes defined in other file,
+         depended on the mining.
+
+ast_term_util - some other ast term method. Such as substitution.
+
+lexer.rb - Split string to lexem.
+
+parser.rb - parse lexem array, and make ast.
+
+optimizer.rb - optimize ast, substitution named element (function, variable)
+
+interpreter.rb - calculate ast, substitution run-time variable. 
+
+work.rb - use only for test code. 

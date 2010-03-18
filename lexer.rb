@@ -10,7 +10,7 @@ class Lexer
   end
 
   def split(str)
-    @lexems = str.scan( /\d+\.\d*|\d+|[+-\/\*^]|[\(\)]|\S[^+-\/\*^\(\)\s]*/ )
+    self.lexems = str.scan( /\d+\.\d*|\d+|[+-\/\*^]|[\(\)]|\S[^+-\/\*^\(\)\s]*/ )
   end
 
 end

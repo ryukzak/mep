@@ -1,6 +1,7 @@
 #!/usr/bin/ruby1.9
 
 require "ast_term"
+require "ast_term_util"
 
 class Interpreter 
   attr_accessor :named, :ast
@@ -11,35 +12,14 @@ class Interpreter
     self.ast = self.ast.substitution! named
   end
   
-  def eval(ast=nil)
-    ast = @ast  if ast.nil?
+  def eval(named=nil)
+    ast = self.ast
+    ast.substitution!  unless named.nil?
     ast.eval
   end
   
-  def part_eval!
-    self.ast = self.ast.part_eval!
-  end
-  
-  def initialize(ast=nil, named=nil)
-    @ast = ast
-    @named = { 
-      "pi"   => [ Constant.new( Math::PI ) ],
-      "x"    => [ Constant.new( 10 ) ],
-      "e"    => [ Constant.new( Math::E ) ],
-      "sqrt" => [ Function.new( ->( x ){ Math.sqrt x[ 0 ] }, 1,
-                                ->( x ){ x[ 0 ] >= 0 } )
-                ],
-      "+"    => [ Function.new( ->( x ){ x[ 0 ] + x[ 1 ] }, 2 ) ],
-      "-"    => [ Function.new( ->( x ){ - x[ 0 ] } ),
-                  Function.new( ->( x ){ x[ 0 ] - x[ 1 ] }, 2 ),
-                ],
-      "*"    => [ Function.new( ->( x ){ x[ 0 ] * x[ 1 ] }, 2 ) ],
-      "/"    => [ Function.new( ->( x ){ x[ 0 ] / x[ 1 ] }, 2,
-                                ->( x ){ x[ 1 ] != 0 }
-                                )
-                ],
-      "^"    => [ Function.new( ->( x ){ x[ 0 ] ** x[ 1 ] }, 2 ) ],
-    }  if named.nil?
+  def initialize(ast=nil)
+    self.ast = ast
   end
   
 end
@@ -59,26 +39,6 @@ class FunctionApplication
     end
     self.function.function.call args
   end
-  
-  def part_eval!
-    self.args = self.args.map { |e| e.part_eval! }
-    if self.args.all? { |e| e.class == Constant } and 
-        self.function.class == Function
-      self.args = self.args.map { |e| e.value }
-      return Constant.new( self.function.function.call args )
-    end
-    self
-  end
-
-  def substitution!(named)
-    fun = named[ self.function.name ].detect do |e|
-      e.arity == self.args.length  if e.class == Function
-    end
-    fun.name = self.function.name
-    self.function = fun.clone
-    self.args = self.args.map { |e| e.substitution! named }
-    self    
-  end
 
 end
 
@@ -93,31 +53,12 @@ class Named
     raise "Unknow data when try to eval"
   end
   
-  def part_eval!
-    self
-  end
-  
-  def substitution!(named)
-    constant = named[ self.name ].detect { |e| e.class == Constant }
-    return self  if constant.nil?
-    return constant  if constant.class == Constant
-    Constant.new constant
-  end
-  
 end
 
 
 class Constant
   
   def eval
-    self
-  end
-
-  def part_eval!
-    self
-  end
-  
-  def substitution!(named)
     self
   end
   
