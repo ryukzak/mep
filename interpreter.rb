@@ -13,21 +13,7 @@ class Interpreter
   
   def eval(ast=nil)
     ast = @ast  if ast.nil?
-    if ast.class == FunctionApplication
-      raise "Unknow function when try to eval"  unless ast.function.class == Function
-      args = ast.args.map do |e|
-        tmp = ( eval e )
-        if tmp.class == Constant
-        then tmp.value
-        else tmp
-        end
-      end
-      ast.function.function.call args
-    elsif ast.class == Named
-      raise "Unknow data when try to eval"
-    elsif ast.class == Constant
-      ast
-    end        
+    ast.eval
   end
   
   def part_eval!
@@ -61,13 +47,24 @@ end
 
 
 class FunctionApplication
+
+  def eval
+    raise "Unknow function when try to eval"  unless self.function.class == Function
+    args = self.args.map do |e|
+      tmp = ( e.eval )
+      if tmp.class == Constant
+      then tmp.value
+      else tmp
+      end
+    end
+    self.function.function.call args
+  end
   
   def part_eval!
     self.args = self.args.map { |e| e.part_eval! }
     if self.args.all? { |e| e.class == Constant } and 
         self.function.class == Function
       self.args = self.args.map { |e| e.value }
-#       puts ">", self.args.inspect
       return Constant.new( self.function.function.call args )
     end
     self
@@ -92,6 +89,10 @@ end
 
 class Named
   
+  def eval
+    raise "Unknow data when try to eval"
+  end
+  
   def part_eval!
     self
   end
@@ -108,6 +109,10 @@ end
 
 class Constant
   
+  def eval
+    self
+  end
+
   def part_eval!
     self
   end
