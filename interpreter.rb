@@ -6,23 +6,9 @@ class Interpreter
   attr_accessor :named, :ast
   
   def substitution(ast=nil, named=nil)
-    @named.merge! named  unless named.nil?
-    ast = @ast  if ast.nil?
-    if ast.class == FunctionApplication
-      return ast  unless @named.include? ast.function.name
-      fun = @named[ ast.function.name ].detect do |e| 
-        e.arity == ast.args.length  if e.class == Function
-      end
-      fun.name = ast.function.name
-      ast.function = fun.clone
-      ast.args = ast.args.map { |e| substitution e}
-      ast
-    elsif ast.class == Named
-      return ast  unless @named.include? ast.name
-      @named[ ast.name ].detect { |e| e.class == Constant }
-    elsif ast.class == Constant
-      ast
-    end    
+    named = self.named  if named.nil?
+    ast = self.ast  if ast.nil?
+    @ast = ast.substitution! @named
   end
   
   def eval(ast=nil)
@@ -45,7 +31,7 @@ class Interpreter
   end
   
   def part_eval!
-    self.ast.part_eval!
+    self.ast = self.ast.part_eval!
   end
   
   def initialize(ast=nil, named=nil)
@@ -81,11 +67,22 @@ class FunctionApplication
     if self.args.all? { |e| e.class == Constant } and 
         self.function.class == Function
       self.args = self.args.map { |e| e.value }
+#       puts ">", self.args.inspect
       return Constant.new( self.function.function.call args )
     end
     self
   end
-  
+
+  def substitution!(named)
+    fun = named[ self.function.name ].detect do |e|
+      e.arity == self.args.length  if e.class == Function
+    end
+    fun.name = self.function.name
+    self.function = fun.clone
+    self.args = self.args.map { |e| e.substitution! named }
+    self    
+  end
+
 end
 
 
@@ -99,12 +96,23 @@ class Named
     self
   end
   
+  def substitution!(named)
+    constant = named[ self.name ].detect { |e| e.class == Constant }
+    return self  if constant.nil?
+    return constant  if constant.class == Constant
+    Constant.new constant
+  end
+  
 end
 
 
 class Constant
   
   def part_eval!
+    self
+  end
+  
+  def substitution!(named)
     self
   end
   
