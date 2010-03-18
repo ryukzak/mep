@@ -16,20 +16,21 @@ require "interpreter"
 
 
 # ast = Parser.run( Lexer.run "- x + ( 2 - ( 3 + c )  )  -  sin(x)*(1+2)" )
-ast = Parser.run(  Lexer.run "2 + 2 + y + 2*4" )
+ast = Parser.run(  Lexer.run "2 + 2 - pi + 2*4" )
 # ast = Parser.run(  Lexer.run "2*4" )
 
 ast.to_gv_file
 # ast.to_gv_file "out2.gv", "out2.png"
 
 int = Interpreter.new ast
-int.substitution
 
-# puts int.ast.inspect
+int.substitution
+puts ">", int.eval
+puts int.part_eval!
+puts int.ast.inspect
 
 int.ast.to_gv_file "out2.gv", "out2.png"
 
-puts int.part_eval.inspect
 
 # puts int.eval
 

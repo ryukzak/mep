@@ -5,10 +5,10 @@ require "ast_term"
 class Interpreter 
   attr_accessor :named, :ast
   
-  def substitution(ast=nil, named=nil)
+  def substitution!(named=nil)
     named = self.named  if named.nil?
-    ast = self.ast  if ast.nil?
-    @ast = ast.substitution! @named
+    raise "Interpreter:undefine ast"  if self.ast.nil?
+    self.ast = self.ast.substitution! named
   end
   
   def eval(ast=nil)
