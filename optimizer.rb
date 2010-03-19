@@ -4,8 +4,8 @@ require "ast_term_util"
 class Optimizer
   attr_accessor :ast, :named
 
-  def sort_operator
-    
+  def sort_function!
+    self.ast = self.ast.sort_function [ "+", "*" ]
   end
 
   def substitution! named=nil
@@ -44,11 +44,30 @@ end
 
 class FunctionApplication
 
-  def get_operator_line op
-    if op == self.function.name
-      self.args.map { |e| e.get_operator_line op }.flatten
-    else 
+  def sort_function ops
+    if ops.include? self.function.name
+      args = self.get_operator_line self.function.name
+      self.args = self.args.map { |e| e.sort_function ops }  if args.length == 1
+      args = args.find_all { |e| e.constant? } + args.find_all { |e| not e.constant? }
+      args = args.map { |e| e.sort_function ops }
+      args.last( args.length - 1).reduce args.first do |node, a|
+        FunctionApplication.new self.function.clone, [node, a]
+      end 
+    else
+      self.args = self.args.map { |e| e.sort_function ops }
       self
+    end
+  end
+  
+  def get_operator_line op, child=false
+    if op == self.function.name
+      self.args.map { |e| e.get_operator_line op, true }.flatten
+    else
+      if child
+        self
+      else
+        nil
+      end
     end
   end
 
@@ -71,8 +90,16 @@ end
 
 class ASTTermLeaf
 
-  def get_operator_line op
+  def sort_function ops
     self
+  end
+
+  def get_operator_line op, child=false
+    if child
+      self
+    else
+      nil
+    end
   end
 
 end
