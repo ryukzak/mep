@@ -29,6 +29,8 @@ class ParserTerm
 
 end
 
+
+
 class Expression < ParserTerm
   attr_accessor :expr
   
@@ -40,7 +42,44 @@ class Expression < ParserTerm
     self.expr.reverse!
   end
 
+  def make_ast
+    return self.expr[0].make_ast  if self.expr.length == 1
+    
+    expr = self.expr
+    until ( i = find_function_application expr ).nil?
+      pre = if i == 0 then []
+            else expr[ 0 .. ( i - 1 ) ]
+            end
+      fa = FunctionApplication.new( expr[ i ].make_ast, expr[ i + 1 ].make_ast )
+      post = expr[ ( i + 2 ) .. expr.length ]
+      expr = pre.to_a + fa.to_a + post.to_a
+    end
+    
+    until ( i = find_operator expr ).nil?
+      pre = if i == 1 then []
+            else expr[ 0 .. ( i - 2 ) ]
+            end
+      fa = FunctionApplication.new( expr[ i ].make_ast, 
+                                    [expr[ i - 1 ].make_ast,
+                                     expr[ i + 1 ].make_ast 
+                                    ] )
+      
+      if BOXING_OPERATOR.include? fa.function.name
+        fa = BOXING_OPERATOR[ fa.function.name ].call fa
+      end
+      
+      post = if i == expr.length - 2 then []
+             else expr[ ( i + 2 ) .. expr.length ]
+             end
+      expr = pre.to_a + fa.to_a + post.to_a
+    end
+    expr = expr[0]  if expr.length == 1
+    self.ast = expr
+  end
+
 end
+
+
 
 class ExpressionList < ParserTerm
   attr_accessor :exprs
@@ -53,7 +92,11 @@ class ExpressionList < ParserTerm
     self.exprs << e
     self
   end
-  
+
+  def make_ast
+    expr.exprs.map { |e| e.make_ast }    
+  end
+
 end
 
 class Atom < ParserTerm
@@ -99,6 +142,10 @@ class Atom < ParserTerm
       Named.new self.value
     end
   end
+
+  def make_ast
+    expr.to_ast
+  end
   
 end
 
@@ -131,7 +178,7 @@ class Parser
   def run
     self.make_atom self.lexems
     self.make_expr self.atoms
-    self.make_ast self.expr
+    self.expr.make_ast
   end
   
   def make_atom lexems
@@ -199,49 +246,6 @@ class Parser
     atoms
   end
 
-
-
-  def make_ast expr
-    if expr.class == Expression
-      return make_ast expr.expr[0]  if expr.expr.length == 1
-      
-      expr = expr.expr
-      until ( i = find_function_application expr ).nil?
-        pre = if i == 0 then []
-              else expr[ 0 .. ( i - 1 ) ]
-              end
-        fa = FunctionApplication.new( make_ast( expr[ i ] ), make_ast( expr[ i + 1 ] ))
-        post = expr[ ( i + 2 ) .. expr.length ]
-        expr = pre.to_a + fa.to_a + post.to_a
-      end
-      
-      until ( i = find_operator expr ).nil?
-        pre = if i == 1 then []
-              else expr[ 0 .. ( i - 2 ) ]
-              end
-        fa = FunctionApplication.new( make_ast( expr[ i ] ), 
-                                      [make_ast( expr[ i - 1 ] ),
-                                       make_ast( expr[ i + 1 ] ) 
-                                      ] )
-
-        if BOXING_OPERATOR.include? fa.function.name
-          fa = BOXING_OPERATOR[ fa.function.name ].call fa
-        end
-
-        post = if i == expr.length - 2 then []
-               else expr[ ( i + 2 ) .. expr.length ]
-               end
-        expr = pre.to_a + fa.to_a + post.to_a
-      end
-      expr = expr[0]  if expr.length == 1
-      self.ast = expr
-    elsif expr.class == Atom
-      expr.to_ast
-    elsif expr.class == ExpressionList
-      expr.exprs.map { |e| make_ast e }
-    else expr
-    end
-  end
 
   def find_operator expr
     acc = place = nil
