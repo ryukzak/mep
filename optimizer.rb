@@ -32,7 +32,9 @@ class Optimizer
                 ],
       "*"    => [ Function.new( ->( x ){ x[ 0 ] * x[ 1 ] }, 2 ) ],
       "/"    => [ Function.new( ->( x ){ x[ 0 ] / x[ 1 ] }, 2,
-                                ->( x ){ x[ 1 ] != 0 } )
+                                ->( x ){ x[ 1 ] != 0 } ),
+                  Function.new( ->( x ){ 1 / x[ 0 ] }, 1,
+                                ->( x ){ x[ 0 ] != 0 } ),
                 ],
       "^"    => [ Function.new( ->( x ){ x[ 0 ] ** x[ 1 ] }, 2 ) ],
     }  if named.nil?

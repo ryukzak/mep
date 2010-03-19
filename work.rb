@@ -9,7 +9,7 @@ require "optimizer"
 
 
 
-ast = Parser.run(  Lexer.run "2 + 2 - pi + 2*4" )
+ast = Parser.run(  Lexer.run "2 + 2 - pi + 2*4/2" )
 # ast = Parser.run(  Lexer.run "2*4" )
 
 opt = Optimizer.new ast
@@ -24,7 +24,7 @@ boxing = ->(f) do
   end
 end
 
-puts opt.ast.get_operator_line(["+", "-"], boxing)
+# puts opt.ast.get_operator_line(["+", "-"], boxing)
 
 opt.substitution!
 opt.ast.to_gv_file "out2.gv", "out2.png"

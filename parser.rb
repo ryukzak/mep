@@ -112,6 +112,17 @@ class Parser
     "/" => 2,
     "^" => 3,
   } 
+
+  BOXING_OPERATOR = {
+    "-" => ->(f) do 
+      FunctionApplication.new( Named.new("+"), 
+                               [ f.args[ 0 ], FunctionApplication.new( Named.new( "-" ), [ f.args[ 1 ] ] ) ] )
+    end,
+    "/" => ->(f) do 
+      FunctionApplication.new( Named.new("*"), 
+                               [ f.args[ 0 ], FunctionApplication.new( Named.new( "/" ), [ f.args[ 1 ] ] ) ] )
+    end,
+  }
   
   def self.run(lexems)
     p = self.new
@@ -187,11 +198,11 @@ class Parser
 
   def make_ast(expr=nil)
     expr = self.expr  if expr.nil?
-
+    
     if expr.class == Expression
       return make_ast expr.expr[0]  if expr.expr.length == 1
-
-
+      
+      
       expr = expr.expr
       until ( i = find_function_application expr ).nil?
         pre = if i == 0 then []
@@ -201,15 +212,20 @@ class Parser
         post = expr[ ( i + 2 ) .. expr.length ]
         expr = pre.to_a + fa.to_a + post.to_a
       end
-
+      
       until ( i = find_operator expr ).nil?
         pre = if i == 1 then []
               else expr[ 0 .. ( i - 2 ) ]
               end
         fa = FunctionApplication.new( make_ast( expr[ i ] ), 
-                                        [make_ast( expr[ i - 1 ] ),
-                                         make_ast( expr[ i + 1 ] ) 
+                                      [make_ast( expr[ i - 1 ] ),
+                                       make_ast( expr[ i + 1 ] ) 
                                         ] )
+
+        if BOXING_OPERATOR.include? fa.function.name
+          fa = BOXING_OPERATOR[ fa.function.name ].call fa
+        end
+
         post = if i == expr.length - 2 then []
                else expr[ ( i + 2 ) .. expr.length ]
                end
