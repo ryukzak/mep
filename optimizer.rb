@@ -42,12 +42,11 @@ end
 
 class FunctionApplication
 
-  def get_operator_line(opers)
+  def get_operator_line(opers, boxing)
     if opers.include? self.function.name
-      from_args = self.args.map { |e| e.get_operator_line opers }.inject([]) { |a, e| e.nil? ? a : a + e}
-      self.to_a + from_args.to_a
+      self.args.map { |e| e.get_operator_line opers, boxing}
     else 
-      nil
+      boxing.call self
     end
   end
 
@@ -65,8 +64,8 @@ end
 
 
 class ASTTermLeaf
-  def get_operator_line(op_set)
-    nil
+  def get_operator_line(op_set, boxing)
+    self
   end
 end
 
