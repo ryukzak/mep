@@ -7,7 +7,7 @@ class Optimizer
   def sort_function!
     self.ast = self.ast.sort_function [ "+", "*" ]
   end
-
+  
   def substitution! named=nil
     named = self.named  if named.nil?
     raise "Interpreter:undefine ast"  if self.ast.nil?
@@ -17,7 +17,7 @@ class Optimizer
   def part_eval!
     self.ast = self.ast.part_eval!
   end
-
+  
   def initialize ast=nil, named=nil
     self.ast = ast
     self.named = { 
@@ -41,6 +41,8 @@ class Optimizer
   end
   
 end
+
+
 
 class FunctionApplication
 
@@ -88,7 +90,12 @@ class FunctionApplication
 end
 
 
+
 class ASTTermLeaf
+
+  def part_eval!
+    self
+  end
 
   def sort_function ops
     self
@@ -105,12 +112,9 @@ class ASTTermLeaf
 end
 
 
+
 class Named
   
-  def part_eval!
-    self
-  end
-
   def constant?
     false
   end
@@ -118,17 +122,15 @@ class Named
 end
 
 
+
 class Constant
   
-  def part_eval!
-    self
-  end
-
   def constant?
     true
   end
   
 end
+
 
 
 class Function
