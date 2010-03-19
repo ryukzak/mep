@@ -8,7 +8,7 @@ class Optimizer
     
   end
 
-  def substitution!(named=nil)
+  def substitution! named=nil
     named = self.named  if named.nil?
     raise "Interpreter:undefine ast"  if self.ast.nil?
     self.ast = self.ast.substitution! named
@@ -18,7 +18,7 @@ class Optimizer
     self.ast = self.ast.part_eval!
   end
 
-  def initialize(ast=nil, named=nil)
+  def initialize ast=nil, named=nil
     self.ast = ast
     self.named = { 
       "pi"   => [ Constant.new( Math::PI ) ],
@@ -44,7 +44,7 @@ end
 
 class FunctionApplication
 
-  def get_operator_line(op)
+  def get_operator_line op
     if op == self.function.name
       self.args.map { |e| e.get_operator_line op }.flatten
     else 
@@ -70,9 +70,11 @@ end
 
 
 class ASTTermLeaf
-  def get_operator_line(op)
+
+  def get_operator_line op
     self
   end
+
 end
 
 
