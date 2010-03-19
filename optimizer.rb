@@ -87,7 +87,7 @@ class FunctionApplication
     else
       new = rule.reduce.call self
       new.args = new.args.map { |e| e.reduce rules }
-      new
+      new.reduce rules
     end
   end
 
