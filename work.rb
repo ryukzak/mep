@@ -5,11 +5,7 @@ require "parser"
 require "interpreter"
 require "optimizer"
 
-
-
-
-
-ast = Parser.run(  Lexer.run "2 + 2 - pi + 2*4/2" )
+ast = Parser.new( Lexer.run "2 + 2 - pi + 2*4/2" ).run
 # ast = Parser.run(  Lexer.run "2*4" )
 
 opt = Optimizer.new ast

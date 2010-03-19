@@ -32,7 +32,7 @@ end
 class Expression < ParserTerm
   attr_accessor :expr
   
-  def initialize(e)
+  def initialize e
     self.expr = e
   end
   
@@ -45,11 +45,11 @@ end
 class ExpressionList < ParserTerm
   attr_accessor :exprs
   
-  def initialize(e=[])
+  def initialize e=[]
     self.exprs = e
   end  
   
-  def push(e)
+  def push e
     self.exprs << e
     self
   end
@@ -59,7 +59,7 @@ end
 class Atom < ParserTerm
   attr_accessor :value
   
-  def initialize(l)
+  def initialize l
     self.value = case l
              when "(" then :open
              when ")" then :close
@@ -105,7 +105,7 @@ end
 class Parser
   attr_accessor :lexems, :atoms, :expr, :ast
 
-  OPERATORS = { 
+  OPERATORS = {
     "+" => 1,
     "-" => 1,
     "*" => 2,
@@ -114,43 +114,46 @@ class Parser
   } 
 
   BOXING_OPERATOR = {
-    "-" => ->(f) do 
+    "-" => ->f do 
       FunctionApplication.new( Named.new("+"), 
                                [ f.args[ 0 ], FunctionApplication.new( Named.new( "-" ), [ f.args[ 1 ] ] ) ] )
     end,
-    "/" => ->(f) do 
+    "/" => ->f do 
       FunctionApplication.new( Named.new("*"), 
                                [ f.args[ 0 ], FunctionApplication.new( Named.new( "/" ), [ f.args[ 1 ] ] ) ] )
     end,
   }
   
-  def self.run(lexems)
-    p = self.new
-    p.make_atom lexems
-    p.make_expr
-    p.make_ast
+  def initialize lexems
+    self.lexems = lexems
   end
- 
-  def make_atom(lexems=nil)
-    self.lexems = lexems  unless lexems.nil?
+
+  def run
+    self.make_atom self.lexems
+    self.make_expr self.atoms
+    self.make_ast self.expr
+  end
+  
+  def make_atom lexems
     self.atoms = self.lexems.map { |e| Atom.new e  }
   end
   
-  def make_expr(atoms=nil)
-    atoms = self.atoms  if atoms.nil?
+
+
+  def make_expr atoms
     atoms = ( make_expr_list atoms ).to_a  if expr_list? atoms
     atoms = parentheses_to_expr atoms
-    unless atoms.length == 1 and atoms[0].class == ExpressionList
+    unless atoms.length == 1 and atoms[ 0 ].class == ExpressionList
       atoms = Expression.new atoms
     end
     self.expr = atoms
   end
   
-  def expr_list?(atoms)
+  def expr_list? atoms
     not comma_position( atoms ).nil?
   end
   
-  def comma_position(atoms)
+  def comma_position atoms
     n = i = 0
     while i < atoms.length and not( atoms[ i ].comma? and n == 0 )
       n += 1  if atoms[ i ].open?
@@ -162,7 +165,8 @@ class Parser
     return i
   end
   
-  def make_expr_list(atoms)
+  def make_expr_list atoms
+    # Split atom list by comma in Expression
     expr_list = ExpressionList.new
     until ( i = comma_position( atoms ) ).nil?
       expr_list.push make_expr( atoms[ 0 .. ( i - 1 ) ] )
@@ -171,12 +175,12 @@ class Parser
     expr_list.push make_expr( atoms )
   end
   
-  def parentheses?(atoms)    
+  def parentheses? atoms
     atoms.each { |e| return true  if e.class == Atom and e.open? }
     false
   end
     
-  def parentheses_to_expr(atoms)
+  def parentheses_to_expr atoms
     raise "Empty parentheses"  if atoms.empty?
     while parentheses? atoms
       i1 = 0
@@ -188,7 +192,6 @@ class Parser
         n -= 1  if atoms[ i2 ].close?
       end until n == 0
       expr = make_expr( atoms[ ( i1 + 1 ) .. ( i2 - 1 ) ] )
-
       atoms = atoms[ 0 .. ( i1 - 1 ) ].to_a +
         expr.to_a  +
         atoms[ ( i2 + 1 ) .. ( atoms.length ) ].to_a
@@ -196,12 +199,11 @@ class Parser
     atoms
   end
 
-  def make_ast(expr=nil)
-    expr = self.expr  if expr.nil?
-    
+
+
+  def make_ast expr
     if expr.class == Expression
       return make_ast expr.expr[0]  if expr.expr.length == 1
-      
       
       expr = expr.expr
       until ( i = find_function_application expr ).nil?
@@ -220,7 +222,7 @@ class Parser
         fa = FunctionApplication.new( make_ast( expr[ i ] ), 
                                       [make_ast( expr[ i - 1 ] ),
                                        make_ast( expr[ i + 1 ] ) 
-                                        ] )
+                                      ] )
 
         if BOXING_OPERATOR.include? fa.function.name
           fa = BOXING_OPERATOR[ fa.function.name ].call fa
@@ -241,13 +243,12 @@ class Parser
     end
   end
 
-  
-  def find_operator(expr)
+  def find_operator expr
     acc = place = nil
     return nil  unless expr.class == Array
     for i in ( 0 .. expr.length - 1 ) do
-      if expr[i].operator?
-        p = expr[i].priority
+      if expr[ i ].operator?
+        p = expr[ i ].priority
         if acc.nil? or acc < p
           acc = p
           place = i
@@ -257,7 +258,7 @@ class Parser
     place
   end
 
-  def find_function_application(expr)
+  def find_function_application expr
     i = 0
     while i < expr.length - 1
         if expr[ i ].class == Expression and expr[ i + 1].class == Expression
@@ -276,4 +277,3 @@ class Parser
   end
   
 end
-
