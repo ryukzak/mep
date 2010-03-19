@@ -2,7 +2,11 @@ require "ast_term"
 require "ast_term_util"
 
 class Optimizer
-  attr_accessor :ast, :named
+  attr_accessor :ast, :named, :reduce_rule
+
+  def reduce!
+    self.ast = self.ast.reduce reduce_rule
+  end
 
   def sort_function!
     self.ast = self.ast.sort_function [ "+", "*" ]
@@ -38,13 +42,76 @@ class Optimizer
                 ],
       "^"    => [ Function.new( ->( x ){ x[ 0 ] ** x[ 1 ] }, 2 ) ],
     }  if named.nil?
+    self.reduce_rule = 
+      [ReduceRule.new(-> f {f.function.name == "+" and not f.find_fun("-").nil? },
+                      -> f do 
+                        fun = Function.new( ->( x ){ x[ 0 ] - x[ 1 ] }, 2 )
+                        fun.name = "-"
+                        a1 = f.find_other_fun("-")
+                        a2 = f.find_fun("-").args[0]
+                        FunctionApplication.new( fun, [ a1, a2 ] )
+                      end ),
+       ReduceRule.new(-> f {f.function.name == "*" and not f.find_fun("/").nil? },
+                      -> f do 
+                        fun = Function.new( ->( x ){ x[ 0 ] / x[ 1 ] }, 2,
+                                            ->( x ){ x[ 1 ] != 0 } )
+                        fun.name = "/"
+                        a1 = f.find_other_fun("/")
+                        a2 = f.find_fun("/").args[0]
+                        FunctionApplication.new( fun, [ a1, a2 ] )
+                      end )
+      ]
   end
   
 end
 
 
+class ReduceRule
+  attr_accessor :conduction, :reduce
+
+  def initialize c, r
+    self.conduction = c
+    self.reduce = r
+  end
+
+end
+
 
 class FunctionApplication
+
+  def reduce rules
+    rule = rules.find { |e| e.conduction.call self }
+    if rule.nil?
+      self.args = self.args.map { |e| e.reduce rules }
+      self
+    else
+      new = rule.reduce.call self
+      new.args = new.args.map { |e| e.reduce rules }
+      new
+    end
+  end
+
+  def find_fun fun_name
+    # use for reduction rule
+    self.args.find do |e| 
+      if e.class == FunctionApplication
+        e.function.name == fun_name 
+      else 
+        false 
+      end
+    end
+  end
+
+  def find_other_fun fun_name
+    # use for reduction rule
+    self.args.find do |e| 
+      if e.class == FunctionApplication
+        e.function.name != fun_name 
+      else 
+        false 
+      end
+    end
+  end
 
   def sort_function ops
     if ops.include? self.function.name
@@ -92,6 +159,10 @@ end
 
 
 class ASTTermLeaf
+
+  def reduce rule
+    self
+  end
 
   def part_eval!
     self
