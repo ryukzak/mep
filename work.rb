@@ -15,6 +15,8 @@ ast = Parser.run(  Lexer.run "2 + 2 - pi + 2*4" )
 opt = Optimizer.new ast
 opt.ast.to_gv_file "out1.gv", "out1.png"
 
+puts opt.ast.get_operator_line(["+", "-"]).map { |e| e.function.name }
+
 opt.substitution!
 opt.ast.to_gv_file "out2.gv", "out2.png"
 

@@ -4,6 +4,10 @@ require "ast_term_util"
 class Optimizer
   attr_accessor :ast, :named
 
+  def sort_operator
+    
+  end
+
   def substitution!(named=nil)
     named = self.named  if named.nil?
     raise "Interpreter:undefine ast"  if self.ast.nil?
@@ -38,6 +42,15 @@ end
 
 class FunctionApplication
 
+  def get_operator_line(opers)
+    if opers.include? self.function.name
+      from_args = self.args.map { |e| e.get_operator_line opers }.inject([]) { |a, e| e.nil? ? a : a + e}
+      self.to_a + from_args.to_a
+    else 
+      nil
+    end
+  end
+
   def part_eval!
     self.args = self.args.map { |e| e.part_eval! }
     if self.args.all? { |e| e.class == Constant } and 
@@ -52,6 +65,9 @@ end
 
 
 class ASTTermLeaf
+  def get_operator_line(op_set)
+    nil
+  end
 end
 
 
