@@ -1,2 +1,3 @@
 (A) REFACTOR parser.
-(C) parser go in infinite loop with "(3+4)-2"
+(D) parser go in infinite loop with "(3+4)-2".
+(D) Extract make_ast from Parser to ParserTerm. <refactor parser>
