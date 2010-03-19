@@ -17,8 +17,12 @@ opt.ast.to_gv_file "out2.gv", "out2.png"
 opt.sort_function!
 opt.ast.to_gv_file "out3.gv", "out3.png"
 
-opt.part_eval!
+opt.reduce!
+# puts opt.ast.inspect
 opt.ast.to_gv_file "out4.gv", "out4.png"
+
+opt.part_eval!
+opt.ast.to_gv_file "out5.gv", "out5.png"
 
 int = Interpreter.new opt.ast
 puts int.eval
