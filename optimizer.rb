@@ -44,11 +44,11 @@ end
 
 class FunctionApplication
 
-  def get_operator_line(opers, boxing)
-    if opers.include? self.function.name
-      self.args.map { |e| e.get_operator_line opers, boxing}
+  def get_operator_line(op)
+    if op == self.function.name
+      self.args.map { |e| e.get_operator_line op }.flatten
     else 
-      boxing.call self
+      self
     end
   end
 
@@ -62,11 +62,15 @@ class FunctionApplication
     self
   end
 
+  def constant?
+    self.args.all? { |e| e.constant? }
+  end
+
 end
 
 
 class ASTTermLeaf
-  def get_operator_line(op_set, boxing)
+  def get_operator_line(op)
     self
   end
 end
@@ -77,6 +81,10 @@ class Named
   def part_eval!
     self
   end
+
+  def constant?
+    false
+  end
   
 end
 
@@ -85,6 +93,10 @@ class Constant
   
   def part_eval!
     self
+  end
+
+  def constant?
+    true
   end
   
 end
