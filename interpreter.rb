@@ -15,7 +15,7 @@ class Interpreter
   def eval(named=nil)
     ast = self.ast
     ast.substitution!  unless named.nil?
-    ast.eval
+    ast.eval.value
   end
   
   def initialize(ast=nil)
