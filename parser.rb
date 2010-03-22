@@ -102,6 +102,23 @@ class Atom < ParserTerm
   
 end
 
+class ASTTerm
+  
+  def operator?
+    false
+  end
+
+  def priority
+    nil
+  end
+
+  def to_a
+    [self]
+  end
+
+
+end
+
 class Parser
   attr_accessor :lexems, :atoms, :expr, :ast
 

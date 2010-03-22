@@ -5,18 +5,6 @@
 class ASTTerm  
   attr_accessor :gv
 
-  def to_a
-    [self]
-  end
-
-  def operator?
-    false
-  end
-
-  def priority
-    nil
-  end
-
   def to_gv_file(gv_file="out.gv", png_file="out.png")    
     f = File.new(gv_file,  "w")
     f.puts "digraph G {"

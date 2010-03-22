@@ -1,6 +1,5 @@
 (A) REFACTOR parser.
 (D) parser go in infinite loop with "(3+4)-2".
-(D) Extract make_ast from Parser to ParserTerm. <refactor parser>
 (C) Mark all destruction method. (or rewrite)
 (C) Make reduce primitive
 
