@@ -15,7 +15,7 @@ class Optimizer
   def substitution! named=nil
     named = self.named  if named.nil?
     raise "Interpreter:undefine ast"  if self.ast.nil?
-    self.ast = self.ast.substitution! named
+    self.ast = self.ast.substitution named
   end
   
   def part_eval!
