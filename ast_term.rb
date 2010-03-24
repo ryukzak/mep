@@ -104,13 +104,13 @@ end
 class Constant < ASTTermLeaf
   attr_accessor :value
 
-  def to_gv!(f=$>)
+  def to_gv! f=$>
     leaf_to_gv! f, self.value
   end
 
   private
 
-  def initialize(v)
+  def initialize v
     super()
     self.value = v
   end
