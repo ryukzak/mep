@@ -4,25 +4,30 @@ require "ast_term_util"
 class Optimizer
   attr_accessor :ast, :named, :reduce_rule
 
-  def reduce!
-    self.ast = self.ast.reduce reduce_rule
+  def run named=nil
+    substitution( named ).sort_function.reduce( self.reduce_rule ).part_eval
   end
 
-  def sort_function!
-    self.ast = self.ast.sort_function [ "+", "*" ]
+  def reduce reduce_rule
+    Optimizer.new self.ast.reduce( reduce_rule ), self.named
+  end
+
+  def sort_function
+    Optimizer.new self.ast.sort_function( [ "+", "*" ] ), self.named
   end
   
-  def substitution! named=nil
+  def substitution named
     named = self.named  if named.nil?
-    raise "Interpreter:undefine ast"  if self.ast.nil?
-    self.ast = self.ast.substitution named
+    Optimizer.new self.ast.substitution( named ), self.named
   end
   
-  def part_eval!
-    self.ast = self.ast.part_eval!
+  def part_eval
+    Optimizer.new self.ast.part_eval, self.named
   end
+
+  private
   
-  def initialize ast=nil, named=nil
+  def initialize ast, named=nil
     self.ast = ast
     self.named = { 
       "pi"   => [ Constant.new( Math::PI ) ],
@@ -140,8 +145,8 @@ class FunctionApplication
     end
   end
 
-  def part_eval!
-    self.args = self.args.map { |e| e.part_eval! }
+  def part_eval
+    self.args = self.args.map { |e| e.part_eval }
     if self.args.all? { |e| e.class == Constant } and 
         self.function.class == Function
       self.args = self.args.map { |e| e.value }
@@ -164,7 +169,7 @@ class ASTTermLeaf
     self
   end
 
-  def part_eval!
+  def part_eval
     self
   end
 
