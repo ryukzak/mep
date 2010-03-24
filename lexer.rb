@@ -4,12 +4,14 @@ class Lexer
 
   attr_accessor :string, :lexems
 
-  def initialize str
-    self.string = str
-  end
-
   def run
     split self.string 
+  end
+
+  private
+
+  def initialize str
+    self.string = str
   end
 
   def split string=nil

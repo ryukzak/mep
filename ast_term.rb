@@ -36,11 +36,6 @@ end
 class FunctionApplication < ASTTerm
   attr_accessor :function, :args
 
-  def initialize fun, args
-    self.function = fun
-    args = args.to_a  unless args.class == Array
-    self.args = args  
-  end
   
   def to_gv! f=$>
     f.puts self.args.map { |e| "\"#{ function.to_gv! f }\" -> \"#{ e.to_gv! f }\";" }
@@ -52,26 +47,36 @@ class FunctionApplication < ASTTerm
     function.reset_gv_flag    
   end
 
+  private
+
+  def initialize fun, args
+    self.function = fun
+    args = args.to_a  unless args.class == Array
+    self.args = args  
+  end
+
 end
 
 
 
 class ASTTermLeaf < ASTTerm
 
-  def initialize
-    self.gv = true
-  end
-
   def reset_gv_flag
     self.gv = true
   end
 
-  def leaf_to_gv f, str
+  def leaf_to_gv! f, str
     if self.gv
       f.puts "#{ self.object_id } [label = \"#{ str }\"];"
       self.gv = false
     end    
     "#{ self.object_id }"
+  end
+
+  private
+
+  def initialize
+    self.gv = true
   end
 
 end
@@ -81,13 +86,15 @@ end
 class Named < ASTTermLeaf
   attr_accessor :name
 
+  def to_gv! f=$>
+    leaf_to_gv! f, self.name
+  end
+
+  private
+
   def initialize n
     super()
     self.name = n
-  end
-
-  def to_gv! f=$>
-    leaf_to_gv f, self.name
   end
 
 end
@@ -97,13 +104,15 @@ end
 class Constant < ASTTermLeaf
   attr_accessor :value
 
+  def to_gv!(f=$>)
+    leaf_to_gv! f, self.value
+  end
+
+  private
+
   def initialize(v)
     super()
     self.value = v
-  end
-
-  def to_gv!(f=$>)
-    leaf_to_gv f, self.value
   end
   
 end
@@ -113,15 +122,17 @@ end
 class Function < ASTTermLeaf
   attr_accessor :function, :condition, :arity, :name
 
+  def to_gv! f=$>
+    leaf_to_gv! f, self.name
+  end
+
+  private
+
   def initialize f, a=1, c=nil
     super()
     self.function = f
     self.arity = a
     self.condition = c
-  end
-
-  def to_gv! f=$>
-    leaf_to_gv f, self.name
   end
 
 end
