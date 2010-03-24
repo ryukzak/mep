@@ -6,32 +6,30 @@ require "ast_term_util"
 class Interpreter 
   attr_accessor :named, :ast
   
-  def substitution!(named=nil)
+  def eval named=nil
     named = self.named  if named.nil?
-    raise "Interpreter:undefine ast"  if self.ast.nil?
-    self.ast = self.ast.substitution! named
+    self.ast.substitution( named ).eval.value
   end
   
-  def eval(named=nil)
-    ast = self.ast
-    ast.substitution!  unless named.nil?
-    ast.eval.value
-  end
-  
-  def initialize(ast=nil)
+  private 
+
+  def initialize ast
     self.ast = ast
+  end
+
+  def substitution named
+    self.ast = self.ast.substitution named
   end
   
 end
 
 
-
 class FunctionApplication
-
+  
   def eval
     raise "Unknow function when try to eval"  unless self.function.class == Function
     args = self.args.map do |e|
-      tmp = ( e.eval )
+      tmp = e.eval
       if tmp.class == Constant
       then tmp.value
       else tmp
@@ -67,4 +65,3 @@ end
 
 class Function
 end
-
